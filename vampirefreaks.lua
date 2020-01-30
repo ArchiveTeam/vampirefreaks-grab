@@ -157,7 +157,6 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     elseif string.match(url, "^https?://[^/]*vampirefreaks%.com/gallery/") then
       local user = string.match(url, "^https?://[^/]+/[^/]+/([0-9A-Za-z_\\%% %-%.]+)")
       for u, s in string.gmatch(html, "viewpic%('([^']+)',%s*'([0-9]+)'%)") do
-print(u, s)
         if u == user then
           ids[s] = true
           check("https://vampirefreaks.com/pic/" .. s .. "?modal=1")
