@@ -42,6 +42,8 @@ end
 allowed = function(url, parenturl)
   if string.match(url, "'+")
       or string.match(url, "[<>\\%*%$;%^%[%],%(%){}]")
+      or string.match(url, "^https?://[^/]*vampirefreaks%.com/points/")
+      or string.match(url, "^https?://[^/]*vampirefreaks%.com/give_points")
       or not string.match(url, "^https?://[^/]*vampirefreaks%.com/") then
     return false
   end
@@ -68,7 +70,7 @@ allowed = function(url, parenturl)
   end
 
   for s in string.gmatch(url, "([0-9A-Za-z_\\%% %-%.]+)") do
-    if ids[d] then
+    if ids[s] then
       return true
     end
   end
@@ -145,20 +147,21 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     html = read_file(file)
     if string.match(url, "^https?://[^/]*vampirefreaks%.com/following/")
         or string.match(url, "^https?://[^/]*vampirefreaks%.com/friends/") then
-      local s, user = string.match(url, "^https?://[^/]+/([^/]+)/([^/]+)")
-      if string.match(url, "%?ajax=1&pg=[0-9]+$") then
+      local s, user = string.match(url, "^https?://[^/]+/([^/]+)/([0-9A-Za-z_\\%% %-%.]+)")
+      --[[if string.match(url, "%?ajax=1&pg=[0-9]+$") then
         local page = tonumber(string.match(url, "([0-9]+)$"))
         check(string.gsub(url, "pg=[0-9]+", "pg=" .. tostring(page+1)))
       end
       check("https://vampirefreaks.com/" .. s .. "/" .. user .. "?ajax=1")
-      check("https://vampirefreaks.com/" .. s .. "/" .. user .. "?ajax=1&pg=0")
+      check("https://vampirefreaks.com/" .. s .. "/" .. user .. "?ajax=1&pg=0")]]
     elseif string.match(url, "^https?://[^/]*vampirefreaks%.com/gallery/") then
-      local user = string.match(url, "^https?://[^/]+/[^/]+/([^/]+)")
-      for u, s in string.gmatch(html, "viewpic('([^']+)', '([0-9]+)')") do
+      local user = string.match(url, "^https?://[^/]+/[^/]+/([0-9A-Za-z_\\%% %-%.]+)")
+      for u, s in string.gmatch(html, "viewpic%('([^']+)',%s*'([0-9]+)'%)") do
+print(u, s)
         if u == user then
-          local url = "https://vampirefreaks.com/pic/" .. s .. "?modal=1"
-          allowed_urls[url] = true
-          check(url)
+          ids[s] = true
+          check("https://vampirefreaks.com/pic/" .. s .. "?modal=1")
+          check("https://vampirefreaks.com/pic/" .. s)
         end
       end
     end
@@ -195,8 +198,8 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   io.stdout:write(url_count .. "=" .. status_code .. " " .. url["url"] .. "  \n")
   io.stdout:flush()
 
-  if string.match(url["url"], "^https?://[^/]*vampirefreaks%.com/([^/]+)$") then
-    ids[string.match(url["url"], "([^/]+)$")] = true
+  if string.match(url["url"], "^https?://[^/]*vampirefreaks%.com/([0-9A-Za-z_\\%% %-%.]+)$") then
+    ids[string.match(url["url"], "([0-9A-Za-z_\\%% %-%.]+)$")] = true
   elseif string.match(url["url"], "^https?://[^/]*vampirefreaks%.com/journal_entry/[0-9]+$")
       or string.match(url["url"], "^https?://[^/]*vampirefreaks%.com/pic/[0-9]+$") then
     ids[string.match(url["url"], "([0-9]+)$")] = true
